@@ -49,7 +49,7 @@ var nothing = reflect.Value{}
 // and the overall result is false.
 //
 // • Let S be the set of all Ignore, Transformer, and Comparer options that
-// remain after applying all path filters, value filters, and type filters.
+// remain after applying all implicit and explicit filters.
 // If at least one Ignore exists in S, then the comparison is ignored.
 // If the number of Transformer and Comparer options in S is greater than one,
 // then Equal panics because it is ambiguous which option to use.
@@ -345,6 +345,15 @@ func (s *state) applyFilters(vx, vy reflect.Value, t reflect.Type, opt option) b
 	for _, f := range opt.valueFilters {
 		if !t.AssignableTo(f.in) || !s.callTTBFunc(f.fnc, vx, vy) {
 			return false
+		}
+	}
+	if op, ok := opt.op.(*transformer); ok {
+		for i := len(s.curPath) - 1; i >= 0; i-- {
+			if t, ok := s.curPath[i].(*transform); ok && op == t.trans {
+				return false
+			} else {
+				break // Hit most recent non-Transform step
+			}
 		}
 	}
 	return true
