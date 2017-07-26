@@ -94,7 +94,8 @@ func (ss sliceSorter) less(v reflect.Value, i, j int) bool {
 //	• Transitive: if !less(x, y) and !less(y, z), then !less(x, z)
 //	• Total: if x != y, then either less(x, y) or less(y, x)
 //
-// SortMaps can be used in conjuction with EquateEmpty.
+// SortMaps can be used in conjunction with EquateEmpty,
+// but cannot be used with DiscardMapZeros.
 func SortMaps(less interface{}) cmp.Option {
 	vf := reflect.ValueOf(less)
 	if !isTTBoolFunc(vf.Type()) || vf.IsNil() {

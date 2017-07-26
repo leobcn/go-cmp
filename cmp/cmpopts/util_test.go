@@ -114,6 +114,60 @@ func TestOptions(t *testing.T) {
 		wantEqual: true,
 		reason:    "equal because EquateEmpty equates empty slices",
 	}, {
+		label:     "DiscardMapZeros",
+		x:         map[string]int{"foo": 5, "fizz": 0},
+		y:         map[string]int{"foo": 5, "buzz": 0},
+		opts:      []cmp.Option{DiscardMapZeros()},
+		wantEqual: true,
+		reason:    "equal because DiscardMapZeros transforms the map to remove fizz and buzz",
+	}, {
+		label:     "DiscardMapZeros",
+		x:         map[string]MyStruct{"alice": {A: []int{1, 2, 3}}, "bob": {}},
+		y:         map[string]MyStruct{"alice": {A: []int{1, 2, 3}}, "charlie": {}},
+		opts:      []cmp.Option{DiscardMapZeros()},
+		wantEqual: true,
+		reason:    "equal because DiscardMapZeros transforms maps with non-comparable types",
+	}, {
+		label: "DiscardMapZeros",
+		x: map[string]MyStruct{
+			"alice": {
+				A: []int{1, 2, 3},
+				C: map[time.Time]string{
+					time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC): "birthday",
+					time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC): "",
+				},
+			},
+			"bob": {},
+		},
+		y: map[string]MyStruct{
+			"alice": {
+				A: []int{1, 2, 3},
+				C: map[time.Time]string{
+					time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC): "birthday",
+					time.Date(2020, time.November, 10, 23, 0, 0, 0, time.UTC): "",
+					time.Date(2030, time.November, 10, 23, 0, 0, 0, time.UTC): "",
+				},
+			},
+			"charlie": {},
+		},
+		opts:      []cmp.Option{DiscardMapZeros()},
+		wantEqual: true,
+		reason:    "equal because DiscardMapZeros recursively applies to sub-maps",
+	}, {
+		label:     "DiscardMapZeros",
+		x:         map[string]MyStruct{"alice": {A: []int{}, C: map[time.Time]string(nil)}, "bob": {}},
+		y:         map[string]MyStruct{"alice": {A: []int(nil), C: map[time.Time]string{}}, "charlie": {}},
+		opts:      []cmp.Option{DiscardMapZeros()},
+		wantEqual: false,
+		reason:    "not equal because empty slices are not the same",
+	}, {
+		label:     "DiscardMapZeros+EquateEmpty",
+		x:         map[string]MyStruct{"alice": {A: []int{}, C: map[time.Time]string(nil)}, "bob": {}},
+		y:         map[string]MyStruct{"alice": {A: []int(nil), C: map[time.Time]string{}}, "charlie": {}},
+		opts:      []cmp.Option{DiscardMapZeros(), EquateEmpty()},
+		wantEqual: true,
+		reason:    "equal because zero map values and empty slices are all equal",
+	}, {
 		label:     "SortSlices",
 		x:         []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 		y:         []int{1, 0, 5, 2, 8, 9, 4, 3, 6, 7},
